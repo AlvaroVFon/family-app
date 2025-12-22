@@ -3,20 +3,26 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
+  Inject,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response, Request } from 'express';
 import {
   AppException,
   ExceptionCode,
   ExceptionStatusCode,
-} from '@core/exceptions';
-import { errorResponse, ApiResponse } from '@core/responses';
+} from '../exceptions';
+import { errorResponse, ApiResponse } from '../responses';
+import type { Logger } from '../logger';
+import { INJECT_LOGGER } from '../logger';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  constructor(@Inject(INJECT_LOGGER) private readonly logger: Logger) {}
+
   catch(exception: HttpException | AppException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
 
     let status: number;
     let apiError: ApiResponse<null>;
@@ -32,7 +38,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
       status = ExceptionStatusCode.GENERIC_ERROR;
     }
 
-    //TODO: Add Logging using @core/logger
+    this.logger.error('Exception caught', {
+      module: 'HttpExceptionFilter',
+      path: request.url,
+      method: request.method,
+      statusCode: status,
+      error: exception.message,
+      stack: exception.stack,
+    });
 
     response.status(status).json(apiError);
   }
