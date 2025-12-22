@@ -4,7 +4,9 @@ import {
   ArgumentsHost,
   HttpException,
   Inject,
+  Inject,
 } from '@nestjs/common';
+import type { Response, Request } from 'express';
 import type { Response, Request } from 'express';
 import {
   AppException,
@@ -14,14 +16,21 @@ import {
 import { errorResponse, ApiResponse } from '../responses';
 import type { Logger } from '../logger';
 import { INJECT_LOGGER } from '../logger';
+} from '../exceptions';
+import { errorResponse, ApiResponse } from '../responses';
+import type { Logger } from '../logger';
+import { INJECT_LOGGER } from '../logger';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   constructor(@Inject(INJECT_LOGGER) private readonly logger: Logger) {}
 
+  constructor(@Inject(INJECT_LOGGER) private readonly logger: Logger) {}
+
   catch(exception: HttpException | AppException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
     const request = ctx.getRequest<Request>();
 
     let status: number;
