@@ -1,5 +1,9 @@
 import { ExceptionCode, ExceptionStatusCode } from '@core/exceptions';
-import { ResponseStatusCode } from './responses.enum';
+import {
+  ErrorMessage,
+  ResponseMessage,
+  ResponseStatusCode,
+} from './responses.enum';
 
 export interface ApiError {
   code: ExceptionCode;
@@ -10,7 +14,7 @@ export interface ApiError {
 
 export interface ApiResponse<T> {
   data: T | T[] | null;
-  message: string;
+  message: ResponseMessage | ErrorMessage;
   statusCode: ResponseStatusCode | ExceptionStatusCode;
   error: ApiError | null;
 }
