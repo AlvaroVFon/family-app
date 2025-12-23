@@ -490,6 +490,19 @@ export { CoreModule } from '@core/core.module';
 
 ---
 
+## 🧪 Testing
+
+Tests unitarios que validan los contratos de la librería:
+
+```bash
+# Ejecutar todos los tests de @core
+pnpm test:core
+```
+
+**Coverage:** Exceptions, Responses, Filters, Logger (31 tests)
+
+---
+
 ## 📄 Licencia
 
 Este código es parte del monorepo interno del proyecto. No redistribuir.
