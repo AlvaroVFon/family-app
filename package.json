@@ -25,6 +25,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/mongoose": "^11.0.4",
     "@nestjs/platform-express": "^11.0.1",
     "mongoose": "^9.0.2",
@@ -78,7 +79,8 @@
     ],
     "moduleNameMapper": {
       "^@core(|/.*)$": "<rootDir>/libs/core/src/$1",
-      "^@database(|/.*)$": "<rootDir>/libs/database/src/$1"
+      "^@database(|/.*)$": "<rootDir>/libs/database/src/$1",
+      "^@events(|/.*)$": "<rootDir>/libs/events/src/$1"
     }
   }
 }
