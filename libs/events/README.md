@@ -563,6 +563,152 @@ export class RabbitMQEventBusService implements EventBus {
 
 ---
 
+## Testing
+
+### Ejecutar Tests
+
+```bash
+# Ejecutar todos los tests de la librería
+pnpm test:events
+```
+
+### Estructura de Tests
+
+La librería incluye tres niveles de testing:
+
+#### 1. **Tests Unitarios** (`*.spec.ts`)
+
+**InMemoryEventBusService**
+
+```typescript
+describe('InMemoryEventBusService', () => {
+  it('should emit event through EventEmitter2', () => {
+    const event: DomainEvent<{ test: string }> = {
+      eventName: 'test.event',
+      aggregateId: 'test-123',
+      payload: { test: 'data' },
+      occurredAt: new Date(),
+    };
+
+    service.publish(event);
+
+    expect(eventEmitter.emit).toHaveBeenCalledWith('test.event', event);
+  });
+});
+```
+
+**EventsModule**
+
+```typescript
+describe('EventsModule', () => {
+  it('should provide EventBus through INJECT_EVENT_BUS token', () => {
+    const eventBus = module.get(INJECT_EVENT_BUS);
+    expect(eventBus).toBeDefined();
+    expect(eventBus).toBeInstanceOf(InMemoryEventBusService);
+  });
+});
+```
+
+#### 2. **Tests de Integración** (`*.integration.spec.ts`)
+
+Probar el flujo completo: Publisher → EventBus → Listener
+
+```typescript
+@Injectable()
+class TestPublisher {
+  constructor(@Inject(INJECT_EVENT_BUS) private readonly eventBus: EventBus) {}
+
+  publishEvent(data: string) {
+    const event: DomainEvent<TestPayload> = {
+      eventName: 'test.integration',
+      aggregateId: 'test-agg',
+      payload: { data },
+      occurredAt: new Date(),
+    };
+    this.eventBus.publish(event);
+  }
+}
+
+@Injectable()
+class TestListener {
+  public receivedEvents: DomainEvent<TestPayload>[] = [];
+
+  @OnEvent('test.integration')
+  handleTestEvent(event: DomainEvent<TestPayload>) {
+    this.receivedEvents.push(event);
+  }
+}
+
+it('should publish and receive events end-to-end', async () => {
+  publisher.publishEvent('test data');
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  expect(listener.receivedEvents).toHaveLength(1);
+  expect(listener.receivedEvents[0].payload.data).toBe('test data');
+});
+```
+
+#### 3. **Mocking en Tests de Aplicación**
+
+```typescript
+// users.service.spec.ts
+describe('UsersService', () => {
+  let eventBus: EventBus;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        {
+          provide: INJECT_EVENT_BUS,
+          useValue: {
+            publish: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    eventBus = module.get(INJECT_EVENT_BUS);
+  });
+
+  it('should publish USER_REGISTERED event', async () => {
+    await service.register({ email: 'test@test.com' });
+
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventName: Events.USER_REGISTERED,
+        payload: expect.objectContaining({
+          email: 'test@test.com',
+        }),
+      }),
+    );
+  });
+});
+```
+
+### Cobertura de Código
+
+```
+File                             | % Stmts | % Branch | % Funcs | % Lines
+---------------------------------|---------|----------|---------|--------
+libs/events/src                  |     100 |      100 |     100 |     100
+  events.module.ts               |     100 |      100 |     100 |     100
+  event-bus.interface.ts         |     100 |      100 |     100 |     100
+  in-memory-event-bus.service.ts |     100 |      100 |     100 |     100
+```
+
+### Best Practices de Testing
+
+| Práctica                      | Descripción                                                                        |
+| ----------------------------- | ---------------------------------------------------------------------------------- |
+| **Mock EventBus**             | En tests unitarios, siempre mockea el EventBus para aislar la lógica               |
+| **Verificar Llamadas**        | Usa `toHaveBeenCalledWith()` para validar que se publiquen los eventos correctos   |
+| **Tests Asíncronos**          | Los listeners son asíncronos, usa `async/await` o timeouts en tests de integración |
+| **No Testear Implementación** | Testea el contrato (EventBus interface), no la implementación (EventEmitter2)      |
+| **Eventos Reales**            | En integration tests, usa eventos reales del enum `Events`                         |
+
+---
+
 ## Best Practices
 
 ### ✅ DO
