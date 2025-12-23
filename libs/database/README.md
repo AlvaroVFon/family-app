@@ -407,6 +407,54 @@ export const INJECT_DATABASE = Symbol('INJECT_DATABASE');
 
 Úsalo con `@Inject(INJECT_DATABASE)`.
 
+## 🧪 Testing
+
+La librería incluye **17 tests unitarios** que cubren los aspectos críticos:
+
+### Ejecutar tests
+
+```bash
+# Tests de libs/database
+pnpm test:database
+
+# Todos los tests del proyecto
+pnpm test
+```
+
+### Cobertura de tests
+
+**`MongooseService` (14 tests):**
+
+- ✅ Construcción correcta de URI de conexión
+- ✅ Manejo de errores de conexión
+- ✅ Gestión de estado (conectado/desconectado)
+- ✅ Validación de `getDBConnection()` sin conexión
+- ✅ Ciclo de vida completo (connect → use → disconnect)
+- ✅ Reconexión después de desconectar
+
+**`DatabaseModule` (3 tests):**
+
+- ✅ Registro correcto del provider `INJECT_DATABASE`
+- ✅ Integración con `CoreConfigModule`
+- ✅ Inyección de dependencias funcional
+
+### Ejemplo de mock en tests de apps
+
+```typescript
+const mockDatabase: DatabaseService = {
+  connect: jest.fn().mockResolvedValue(undefined),
+  getDBConnection: jest.fn().mockReturnValue(mockConnection),
+  disconnect: jest.fn().mockResolvedValue(undefined),
+};
+
+const module = await Test.createTestingModule({
+  providers: [
+    YourService,
+    { provide: INJECT_DATABASE, useValue: mockDatabase },
+  ],
+}).compile();
+```
+
 ## 🚀 Roadmap
 
 - [ ] Implementación PostgreSQL
