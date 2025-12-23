@@ -335,6 +335,92 @@ export class AppModule {}
 
 ---
 
+### 5. **Config** - Gestión de Configuración Tipada
+
+Sistema centralizado para acceso type-safe a configuración, basado en `@nestjs/config` pero con capa de abstracción.
+
+#### Filosofía
+
+> **Las apps configuran, core expone contratos tipados.**
+
+- ❌ NO usar `ConfigService` directamente
+- ✅ Usar servicios wrapper de `@core/config`
+- ✅ Tipado fuerte en toda configuración
+- ✅ Nombres de env vars ocultos
+
+#### Interfaces Disponibles
+
+```typescript
+interface AppConfig {
+  env: 'development' | 'production' | 'test';
+  serviceName: string;
+  port: number;
+}
+
+interface LoggerConfig {
+  level: 'debug' | 'info' | 'warn' | 'error';
+  format: 'json' | 'pretty';
+  includeTimestamp: boolean;
+}
+```
+
+#### Uso en Apps
+
+**1. Configurar en AppModule:**
+
+```typescript
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { CoreConfigModule } from '@core/config';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      // Opcional: validación con Joi
+    }),
+    CoreConfigModule,
+  ],
+})
+export class AppModule {}
+```
+
+**2. Consumir en servicios:**
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { AppConfigService, LoggerConfigService } from '@core/config';
+
+@Injectable()
+export class MyService {
+  constructor(
+    private readonly appConfig: AppConfigService,
+    private readonly loggerConfig: LoggerConfigService,
+  ) {}
+
+  doSomething() {
+    if (this.appConfig.env === 'production') {
+      // ...
+    }
+
+    const logLevel = this.loggerConfig.level;
+  }
+}
+```
+
+#### Variables de Entorno
+
+```env
+NODE_ENV=development
+SERVICE_NAME=family-app
+PORT=3000
+LOG_LEVEL=info
+LOG_FORMAT=json
+LOG_INCLUDE_TIMESTAMP=true
+```
+
+---
+
 ## 🚀 Instalación en tu App
 
 ### 1. Importa `CoreModule` en tu `AppModule`
@@ -480,6 +566,11 @@ export { ResponseMessage, ResponseStatusCode } from '@core/responses';
 // Logger
 export { Logger, LogContext, INJECT_LOGGER } from '@core/logger';
 export { LoggerModule } from '@core/logger';
+
+// Config
+export { AppConfig, LoggerConfig } from '@core/config';
+export { AppConfigService, LoggerConfigService } from '@core/config';
+export { CoreConfigModule } from '@core/config';
 
 // Filters
 export { HttpExceptionFilter } from '@core/filters';
