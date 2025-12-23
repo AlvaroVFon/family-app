@@ -18,6 +18,10 @@ export class LoggerConfigService implements LoggerConfig {
   }
 
   get includeTimestamp(): boolean {
-    return this.configService.get<boolean>('LOG_INCLUDE_TIMESTAMP', true);
+    const value = this.configService.get<string>(
+      'LOG_INCLUDE_TIMESTAMP',
+      'true',
+    );
+    return value === 'true' || value === '1';
   }
 }

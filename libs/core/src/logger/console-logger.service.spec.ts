@@ -1,15 +1,24 @@
 import { ConsoleLogger } from './console-logger.service';
 import { LogContext } from './logger.interface';
+import { LoggerConfigService } from '../config/services/logger-config.service';
 
 describe('ConsoleLogger', () => {
   let logger: ConsoleLogger;
+  let loggerConfig: jest.Mocked<LoggerConfigService>;
   let consoleLogSpy: jest.SpyInstance;
   let consoleErrorSpy: jest.SpyInstance;
   let consoleWarnSpy: jest.SpyInstance;
   let consoleDebugSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    logger = new ConsoleLogger();
+    // Mock LoggerConfigService with default values
+    loggerConfig = {
+      level: 'debug',
+      format: 'json',
+      includeTimestamp: true,
+    } as jest.Mocked<LoggerConfigService>;
+
+    logger = new ConsoleLogger(loggerConfig);
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -128,6 +137,92 @@ describe('ConsoleLogger', () => {
       expect(consoleLogSpy).toHaveBeenCalled();
       const loggedData = consoleLogSpy.mock.calls[0][0];
       expect(loggedData.message).toBe('Simple message');
+    });
+  });
+
+  describe('log level filtering', () => {
+    it('should filter debug logs when level is info', () => {
+      const infoConfig = {
+        level: 'info' as const,
+        format: 'json' as const,
+        includeTimestamp: true,
+      } as jest.Mocked<LoggerConfigService>;
+      const loggerWithInfo = new ConsoleLogger(infoConfig);
+
+      loggerWithInfo.debug('Debug message');
+      loggerWithInfo.info('Info message');
+
+      expect(consoleDebugSpy).not.toHaveBeenCalled();
+      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should only log errors when level is error', () => {
+      const errorConfig = {
+        level: 'error' as const,
+        format: 'json' as const,
+        includeTimestamp: true,
+      } as jest.Mocked<LoggerConfigService>;
+      const loggerWithError = new ConsoleLogger(errorConfig);
+
+      loggerWithError.debug('Debug message');
+      loggerWithError.info('Info message');
+      loggerWithError.warn('Warning message');
+      loggerWithError.error('Error message');
+
+      expect(consoleDebugSpy).not.toHaveBeenCalled();
+      expect(consoleLogSpy).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('format configuration', () => {
+    it('should use pretty format when configured', () => {
+      const prettyConfig = {
+        level: 'debug' as const,
+        format: 'pretty' as const,
+        includeTimestamp: true,
+      } as jest.Mocked<LoggerConfigService>;
+      const loggerWithPretty = new ConsoleLogger(prettyConfig);
+
+      loggerWithPretty.info('Test message', { module: 'TestModule' });
+
+      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+      const output = consoleLogSpy.mock.calls[0][0] as string;
+      expect(typeof output).toBe('string');
+      expect(output).toContain('INFO: Test message');
+    });
+
+    it('should use json format when configured', () => {
+      logger.info('Test message');
+
+      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+      const output = consoleLogSpy.mock.calls[0][0] as Record<string, any>;
+      expect(typeof output).toBe('object');
+      expect(output.level).toBe('info');
+    });
+  });
+
+  describe('timestamp configuration', () => {
+    it('should include timestamp when configured', () => {
+      logger.info('Test message');
+
+      const loggedData = consoleLogSpy.mock.calls[0][0] as Record<string, any>;
+      expect(loggedData).toHaveProperty('timestamp');
+    });
+
+    it('should exclude timestamp when configured', () => {
+      const noTimestampConfig = {
+        level: 'debug' as const,
+        format: 'json' as const,
+        includeTimestamp: false,
+      } as jest.Mocked<LoggerConfigService>;
+      const loggerNoTimestamp = new ConsoleLogger(noTimestampConfig);
+
+      loggerNoTimestamp.info('Test message');
+
+      const loggedData = consoleLogSpy.mock.calls[0][0] as Record<string, any>;
+      expect(loggedData).not.toHaveProperty('timestamp');
     });
   });
 });
