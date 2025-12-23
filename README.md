@@ -1,98 +1,333 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Family App - Backend Monorepo
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Aplicación familiar modular construida con NestJS, diseñada para gestionar usuarios, familias, tareas y notificaciones en un entorno backend-first.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🎯 Project Overview
 
-## Description
+Este proyecto es un **monorepo backend** que implementa una plataforma de gestión familiar. La arquitectura está diseñada para ser:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Modular**: Cada dominio (users, families, tasks) vive en su propia app o librería
+- **Escalable**: Las apps se comunican mediante contratos claros
+- **Type-safe**: TypeScript end-to-end con validación estricta
+- **Testeable**: Cada módulo tiene tests unitarios y de integración
 
-## Project setup
+### Estado Actual
 
-```bash
-$ pnpm install
+**✅ Implementado:**
+- `libs/core` - Librería de infraestructura transversal (excepciones, responses, logger, filters)
+
+**📋 Previsto para MVP:**
+- `libs/database` - Conexión y configuración de MongoDB
+- `libs/mail` - Servicio de envío de emails
+- `apps/users` - Gestión de usuarios
+- `apps/families` - Gestión de familias y miembros
+- `apps/tasks` - Sistema de tareas compartidas
+- `apps/auth` - Autenticación y autorización
+
+---
+
+## 📁 Monorepo Structure
+
+```
+family-app/
+├── apps/                    # Aplicaciones independientes
+│   └── [próximamente]       # users, families, tasks, auth
+│
+├── libs/                    # Librerías compartidas
+│   └── core/               ✅ Infraestructura base (excepciones, logger, responses)
+│       └── README.md       # Documentación detallada
+│
+├── src/                    # App principal (bootstrap temporal)
+├── test/                   # Tests e2e globales
+└── package.json
 ```
 
-## Compile and run the project
+### Filosofía de Organización
 
-```bash
-# development
-$ pnpm run start
+**`apps/`** - Microservicios o módulos principales
+- Cada app gestiona su propio dominio de negocio
+- Tienen sus propios controllers, services, y casos de uso
+- Son dueñas de sus colecciones en la base de datos
+- Pueden consumir libs compartidas
 
-# watch mode
-$ pnpm run start:dev
+**`libs/`** - Código transversal reutilizable
+- No contienen lógica de negocio específica
+- Proporcionan utilidades, configuración, infraestructura
+- Son dependencias de las apps, nunca al revés
 
-# production mode
-$ pnpm run start:prod
+---
+
+## ⚙️ Core Lib
+
+La librería `@core` es el **cimiento técnico común** del monorepo. Proporciona:
+
+### Implementación Actual
+
+✅ **Sistema de Excepciones**
+```typescript
+import { NotFoundException } from '@core/exceptions';
+throw new NotFoundException('User not found');
 ```
 
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+✅ **Helpers de Respuestas HTTP**
+```typescript
+import { successResponse, paginatedResponse } from '@core/responses';
+return successResponse(data);
 ```
 
-## Deployment
+✅ **Exception Filter Global**
+- Captura y formatea todas las excepciones automáticamente
+- Logging con contexto completo
+- Oculta stack traces en producción
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+✅ **Logger Desacoplado**
+```typescript
+import { Inject } from '@nestjs/common';
+import { Logger, INJECT_LOGGER } from '@core/logger';
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+constructor(@Inject(INJECT_LOGGER) private logger: Logger) {}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Testing
 
-## Resources
+```bash
+pnpm test:core  # 31 tests unitarios
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+📖 **[Ver documentación completa de @core](libs/core/README.md)**
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## 🚧 Planned Libs and Apps
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Librerías Previstas
 
-## Stay in touch
+**`libs/database`**
+- Configuración de MongoDB con Mongoose
+- Modelos base y schemas compartidos
+- Conexión y health checks
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+**`libs/mail`**
+- Cliente de email (Nodemailer, SendGrid, etc.)
+- Templates de emails
+- Queue de envío asíncrono
 
-## License
+### Apps Previstas
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**`apps/users`**
+- CRUD de usuarios
+- Perfiles y preferencias
+- Owner de colección: `users`
+
+**`apps/families`**
+- Gestión de familias (crear, invitar miembros)
+- Roles dentro de la familia
+- Owner de colección: `families`
+
+**`apps/tasks`**
+- Sistema de tareas compartidas
+- Asignación y seguimiento
+- Owner de colección: `tasks`
+
+**`apps/auth`**
+- Login/Signup con JWT
+- Refresh tokens
+- Middleware de autenticación
+
+---
+
+## 🔐 Ownership Rules
+
+### Regla de Oro
+
+> **Cada app es dueña de sus propias colecciones de base de datos.**
+
+- `apps/users` es dueña de `users`
+- `apps/families` es dueña de `families` y `family_members`
+- `apps/tasks` es dueña de `tasks` y `task_assignments`
+
+### Comunicación entre Apps
+
+**✅ Permitido:**
+- Leer datos de otra app mediante su API/servicio exportado
+- Emitir eventos que otras apps consumen
+- Compartir DTOs e interfaces mediante libs
+
+**❌ Prohibido:**
+- Escribir directamente en colecciones de otra app
+- Importar servicios internos de otra app
+- Compartir lógica de negocio entre apps
+
+### Ejemplo de Integración
+
+```typescript
+// ✅ CORRECTO
+// apps/tasks necesita info de un usuario
+import { UsersService } from '@apps/users';
+
+@Injectable()
+export class TasksService {
+  constructor(private usersService: UsersService) {}
+  
+  async assignTask(taskId: string, userId: string) {
+    const user = await this.usersService.findById(userId);
+    // ...
+  }
+}
+
+// ❌ INCORRECTO
+// apps/tasks modifica directamente users
+import { UserModel } from '@apps/users/models';
+await UserModel.updateOne({ _id: userId }, { ... }); // NO
+```
+
+---
+
+## 🚀 Getting Started
+
+### Requisitos
+
+- Node.js 18+
+- pnpm 8+
+- MongoDB (cuando se implemente `libs/database`)
+
+### Instalación
+
+```bash
+# Clonar repositorio
+git clone <repo-url>
+cd family-app
+
+# Instalar dependencias
+pnpm install
+```
+
+### Desarrollo
+
+```bash
+# Levantar app en modo desarrollo
+pnpm start:dev
+
+# Ejecutar tests de core
+pnpm test:core
+
+# Build del proyecto
+pnpm build
+
+# Linting
+pnpm lint
+```
+
+### Variables de Entorno
+
+(Próximamente - cuando se implemente database y auth)
+
+```env
+NODE_ENV=development
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/family-app
+JWT_SECRET=your-secret-key
+```
+
+---
+
+## 📊 Diagrama de Estado Actual
+
+```
+┌─────────────────────────────────────┐
+│         family-app (root)           │
+└─────────────────────────────────────┘
+                 │
+        ┌────────┴────────┐
+        │                 │
+    ┌───▼────┐      ┌────▼─────┐
+    │ apps/  │      │  libs/   │
+    └───┬────┘      └────┬─────┘
+        │                │
+        │                │
+    [vacío]         ┌────▼────────┐
+                    │  ✅ core    │
+                    │  - exceptions
+                    │  - responses
+                    │  - filters
+                    │  - logger
+                    └─────────────┘
+```
+
+---
+
+## 📝 Scripts Disponibles
+
+```bash
+# Desarrollo
+pnpm start:dev          # Levantar app en watch mode
+pnpm start:debug        # Modo debug con inspector
+
+# Testing
+pnpm test               # Todos los tests
+pnpm test:core          # Tests de @core únicamente
+pnpm test:watch         # Tests en watch mode
+pnpm test:cov           # Coverage report
+
+# Build y producción
+pnpm build              # Compilar proyecto
+pnpm start:prod         # Ejecutar build de producción
+
+# Calidad de código
+pnpm lint               # Ejecutar ESLint
+pnpm format             # Formatear con Prettier
+```
+
+---
+
+## 🤝 Contributing
+
+### Convenciones
+
+- **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
+- **Branches**: `feature/nombre`, `bugfix/nombre`, `docs/nombre`
+- **PRs**: Requerir revisión antes de merge a `main`
+
+### Agregar Nueva App
+
+```bash
+# Generar app con CLI de Nest
+nest generate app <nombre>
+
+# Configurar paths en tsconfig.json
+{
+  "paths": {
+    "@apps/<nombre>": ["apps/<nombre>/src"]
+  }
+}
+```
+
+### Agregar Nueva Lib
+
+```bash
+# Generar librería
+nest generate library <nombre>
+
+# Configurar paths
+{
+  "paths": {
+    "@libs/<nombre>": ["libs/<nombre>/src"]
+  }
+}
+```
+
+---
+
+## 📖 Documentación Adicional
+
+- [Core Library](libs/core/README.md) - Infraestructura base
+- [NestJS Docs](https://docs.nestjs.com) - Framework oficial
+- (Próximamente) Database Setup
+- (Próximamente) Authentication Flow
+- (Próximamente) API Documentation (Swagger)
+
+---
+
+## 📄 License
+
+Este proyecto es privado y propietario. No redistribuir.
