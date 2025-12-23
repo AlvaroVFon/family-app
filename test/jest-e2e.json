@@ -12,6 +12,7 @@
   },
   "moduleNameMapper": {
     "^@app/core(|/.*)$": "<rootDir>/../libs/core/src/$1",
-    "^@app/core/config(|/.*)$": "<rootDir>/../libs/core/config/src/$1"
+    "^@app/core/config(|/.*)$": "<rootDir>/../libs/core/config/src/$1",
+    "^@database/database(|/.*)$": "<rootDir>/../libs/database/src/$1"
   }
 }

@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AppConfigService, LoggerConfigService } from './services';
+import {
+  AppConfigService,
+  DatabaseConfigService,
+  LoggerConfigService,
+} from './services';
 
 @Module({
   imports: [ConfigModule],
-  providers: [AppConfigService, LoggerConfigService],
-  exports: [AppConfigService, LoggerConfigService],
+  providers: [AppConfigService, LoggerConfigService, DatabaseConfigService],
+  exports: [AppConfigService, LoggerConfigService, DatabaseConfigService],
 })
 export class CoreConfigModule {}
