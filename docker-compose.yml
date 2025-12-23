@@ -1,0 +1,76 @@
+services:
+  # MongoDB 8
+  mongodb:
+    image: mongo:8
+    container_name: family-app-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoUser
+      MONGO_INITDB_ROOT_PASSWORD: mongoPass
+      MONGO_INITDB_DATABASE: family-app
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - family-app-network
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # NestJS Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: family-app
+    restart: unless-stopped
+    environment:
+      # App Config
+      NODE_ENV: production
+      PORT: 3000
+      SERVICE_NAME: family-app
+
+      # Database Config
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_USERNAME: mongoUser
+      DB_PASSWORD: mongoPass
+      DB_NAME: family-app
+
+      # Logger Config
+      LOG_LEVEL: info
+      LOG_FORMAT: json
+      LOG_INCLUDE_TIMESTAMP: true
+    ports:
+      - '3000:3000'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - family-app-network
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:3000',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  family-app-network:
+    driver: bridge
