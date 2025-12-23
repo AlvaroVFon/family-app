@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:core": "jest libs/core"
+    "test:core": "jest libs/core",
+    "test:database": "jest libs/database"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -76,8 +77,8 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "^@app/core(|/.*)$": "<rootDir>/libs/core/src/$1",
-      "^@database/database(|/.*)$": "<rootDir>/libs/database/src/$1"
+      "^@core(|/.*)$": "<rootDir>/libs/core/src/$1",
+      "^@database(|/.*)$": "<rootDir>/libs/database/src/$1"
     }
   }
 }
