@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { CoreService } from './core.service';
 import { LoggerModule } from './logger';
+import { CoreConfigModule } from './config';
 
 @Module({
-  imports: [LoggerModule],
-  providers: [CoreService],
-  exports: [CoreService, LoggerModule],
+  imports: [LoggerModule, CoreConfigModule],
+  providers: [],
+  exports: [LoggerModule, CoreConfigModule],
 })
 export class CoreModule {}
